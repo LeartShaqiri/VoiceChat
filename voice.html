@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Recorder</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #292626;
+    }
+
+    #recordButton {
+      background-color: gray;
+      color: #fff;
+      font-size: 20px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #recordButton:hover {
+      background-color: #212121;
+    }
+
+    #audioPlayer {
+      margin-top: 20px;
+      
+    }
+  </style>
+</head>
+<body>
+  <button id="recordButton">🎙️</button>
+  <audio id="audioPlayer" controls></audio>
+
+  <script>
+    const recordButton = document.getElementById('recordButton');
+    const audioPlayer = document.getElementById('audioPlayer');
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const startRecording = () => {
+      audioChunks = [];
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+              audioChunks.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            audioPlayer.src = audioUrl;
+          };
+
+          mediaRecorder.start();
+        })
+        .catch(error => console.error('Error accessing microphone:', error));
+    };
+
+    const stopRecording = () => {
+      mediaRecorder.stop();
+    };
+
+    recordButton.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        stopRecording();
+        recordButton.innerText = '🎙️ Record';
+      } else {
+        startRecording();
+        recordButton.innerText = '⏹️ Stop';
+      }
+    });
+  </script>
+</body>
+</html>
